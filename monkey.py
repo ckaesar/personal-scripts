@@ -1,7 +1,7 @@
 # coding=utf-8
 import requests
 
-r = requests.get("http://qt.gtimg.cn/q=sh000001,sz001289,sz000625,sz300039,sh601216,sz000099,sz002180,sz002129,sz002276,sh601727,sh600219,sz000564,sh600756,sh600996,sh600737,sz300738,sz002340")
+r = requests.get("http://qt.gtimg.cn/q=sh000001,sz001289,sz000625,sz300039,sh601216,sz000099,sz002180,sz002129,sz002276,sh601727,sh600219,sh600756,sh600996,sh600737,sz300738,sz002340")
 
 
 # r = requests.get("http://hq.sinajs.cn/list=sz002581,sh601168,sz000158,sh603919,sz002665")
