@@ -3,7 +3,6 @@ import requests
 
 r = requests.get("http://qt.gtimg.cn/q=sh000001,sz002837,sz300346,sz002460,sz002456,sh605488,sz000880,sz000833,sz002412,sh600353,sz002821")
 
-
 # r = requests.get("http://hq.sinajs.cn/list=sz002581,sh601168,sz000158,sh603919,sz002665")
 
 response = r.text
