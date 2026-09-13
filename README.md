@@ -21,6 +21,7 @@ pip install requests
 | [monkey-list.py](monkey-list.py) | 获取全部 A 股代码和名称，写入 stocks.csv | 无 |
 | [feishu-bitable.py](feishu-bitable.py) | 读取飞书多维表格指定表格、视图、列的值 | 表格链接或 app_token + table_id，列名可选 |
 | [monkey-bitable.py](monkey-bitable.py) | 读飞书多维表格指定视图的代码列，输出行情 | 多维表格链接，列名可选 |
+| [monkey-hold.py](monkey-hold.py) | 持仓表视图的快捷查询（固定链接，复用 monkey-bitable.py） | 无 |
 | [feishu_bitable.py](feishu_bitable.py) | 飞书多维表格读取的公共模块（被上面两个脚本调用，不直接运行） | — |
 
 ## 股票行情脚本
@@ -93,6 +94,16 @@ python monkey-bitable.py "<多维表格链接>" 股票代码
 元力股份	open:18.35	now:18.02	range:-1.8%
 电力ETF广发	open:1.062	now:1.054	range:-0.75%
 ```
+
+### monkey-hold.py
+
+固定了持仓表链接与视图的快捷脚本，直接运行即可，逻辑全部复用 monkey-bitable.py。
+
+```bash
+python monkey-hold.py
+```
+
+换表格或视图时，编辑脚本顶部的 `URL`。
 
 ## 飞书多维表格脚本
 
