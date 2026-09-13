@@ -110,7 +110,7 @@ python monkey-hold.py
 
 ### trade-analysis/monkey-review.py
 
-交易复盘分析。脚本负责取数与统计（客观、可核对），**分析结论交由 AI 生成**（OpenAI 兼容接口）。脚本、报告、统计材料都集中在 `trade-analysis/` 目录：
+交易复盘分析。脚本负责取数与统计（客观、可核对），**分析结论交由 AI 生成**（OpenAI 兼容接口）。脚本在 `trade-analysis/`，产物统一写在 `trade-analysis/reports/`：
 
 ```bash
 cd trade-analysis
@@ -119,8 +119,8 @@ python monkey-review.py
 
 | 文件 | 内容 |
 |---|---|
-| `report-YYYYMMDD.html` | **单文件 HTML 报告**：全量 / 近期 / 对比三份内容，顶部 tab 切换 |
-| `trade-facts-*.md` | 喂给模型的统计材料（结构化事实，便于核对 AI 的依据） |
+| `reports/report-YYYYMMDD.html` | **单文件 HTML 报告**：全量 / 近期 / 对比三份内容，顶部 tab 切换 |
+| `reports/trade-facts-*.md` | 喂给模型的统计材料（结构化事实，便于核对 AI 的依据） |
 
 - 报告为**单文件原生 HTML**（内嵌 CSS/JS，无任何外部框架或资源），双击即可在任意环境打开
 - **近期区间**：默认取近 30 天的已清仓记录；若不足 30 笔，则改为取最近 30 笔，tab、表头与材料标题都会显示实际区间

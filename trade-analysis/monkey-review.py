@@ -4,9 +4,9 @@
 脚本负责取数与统计（客观、可核对），分析部分交给大模型（OpenAI 兼容接口）。
 HTML 不引用任何外部框架/资源，双击即可打开；图表为脚本生成的原生 SVG。
 
-产出都写在脚本所在目录（trade-analysis/）：
-  report-YYYYMMDD.html               单文件报告（三个 tab）
-  trade-facts-*.md                    喂给模型的统计材料（便于核对 AI 依据）
+产出都写在脚本所在目录下的 reports/ 中：
+  reports/report-YYYYMMDD.html         单文件报告（三个 tab）
+  reports/trade-facts-*.md             喂给模型的统计材料（便于核对 AI 依据）
 
 模型配置读取自项目根目录 feishu-config.json 的 ai 段。
 """
@@ -25,7 +25,7 @@ import feishu_bitable as fb
 
 # 已清仓记录视图
 URL = "https://my.feishu.cn/wiki/PoqXwHD95iU3VSkkxuEc0vL9nrb?table=tblpyRBAhEwCBTh9&view=vewwqbPGtD"
-OUT_DIR = BASE_DIR
+OUT_DIR = os.path.join(BASE_DIR, "reports")
 RECENT_DAYS = 30
 # 近一个月笔数不足该值时，改为取最近这么多笔交易
 RECENT_MIN_COUNT = 30
