@@ -30,7 +30,3 @@ feishu-config.json
 # Python 缓存
 __pycache__/
 *.pyc
-
-# 交易分析产出（报告与统计材料，含个人交易数据，不要提交）
-trade-analysis/*.md
-trade-analysis/*.html
