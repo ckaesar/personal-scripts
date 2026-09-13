@@ -1,5 +1,5 @@
 # coding=utf-8
-"""交易复盘分析：每次执行生成一个单文件 HTML 报告（全量 / 最近 30 天 / 对比，顶部切换）
+"""交易复盘分析：每次执行生成一个单文件 HTML 报告（全量 / 最近区间 / 对比，顶部切换）
 
 脚本负责取数与统计（客观、可核对），分析部分交给大模型（OpenAI 兼容接口）。
 HTML 不引用任何外部框架/资源，双击即可打开；图表为脚本生成的原生 SVG。
@@ -27,6 +27,8 @@ import feishu_bitable as fb
 URL = "https://my.feishu.cn/wiki/PoqXwHD95iU3VSkkxuEc0vL9nrb?table=tblpyRBAhEwCBTh9&view=vewwqbPGtD"
 OUT_DIR = BASE_DIR
 RECENT_DAYS = 30
+# 近一个月笔数不足该值时，改为取最近这么多笔交易
+RECENT_MIN_COUNT = 30
 
 FIELDS = ["股票名称", "股票代码", "买入日期", "买入价格", "买入总成本", "卖出日期", "卖出价格",
           "持股天数", "盈亏金额", "盈亏比", "标签", "是否跟操", "是否严格止盈/止损",
@@ -840,17 +842,17 @@ def md_table(header, rows):
     return lines
 
 
-def build_compare_facts(all_trades, recent_trades):
+def build_compare_facts(all_trades, recent_trades, label):
     """构造对比材料"""
     a = basic_stats(all_trades)
     b = basic_stats(recent_trades)
 
-    def line(label, key, fmt):
-        return "- %s：全量 %s → 近 %d 天 %s" % (label, fmt % a[key], RECENT_DAYS, fmt % b[key])
+    def line(name, key, fmt):
+        return "- %s：全量 %s → %s %s" % (name, fmt % a[key], label, fmt % b[key])
 
     out = ["## 数据来源",
            "本材料由脚本在 %s 实时从飞书多维表格拉取。" % datetime.now().strftime("%Y-%m-%d %H:%M"), ""]
-    out += ["## 对比数据（全量 vs 最近 %d 天）" % RECENT_DAYS, ""]
+    out += ["## 对比数据（全量 vs %s）" % label, ""]
     out += [line("笔数", "count", "%d"), line("胜率", "win_rate", "%.1f%%"),
             line("总盈亏", "total_pnl", "%.0f"), line("平均每笔", "avg_pnl", "%.0f"),
             line("期望值/笔", "expect", "%.0f"), line("盈亏比", "pl_ratio", "%.2f"),
@@ -867,10 +869,10 @@ def build_compare_facts(all_trades, recent_trades):
     pa, pna = discipline(all_trades)
     pb, pnb = discipline(recent_trades)
     out.append("## 纪律指标对比")
-    out.append("- 写了止损位的比例：全量 %.0f%% → 近 %d 天 %.0f%%" % (pa, RECENT_DAYS, pb))
-    out.append("- 无止损计划单的合计盈亏：全量 %.0f → 近 %d 天 %.0f" % (pna, RECENT_DAYS, pnb))
+    out.append("- 写了止损位的比例：全量 %.0f%% → %s %.0f%%" % (pa, label, pb))
+    out.append("- 无止损计划单的合计盈亏：全量 %.0f → %s %.0f" % (pna, label, pnb))
     out.append("")
-    out.append("## 最近 %d 天的交易明细（按卖出日期倒序）" % RECENT_DAYS)
+    out.append("## %s 的交易明细（按卖出日期倒序）" % label)
     for t in sorted(recent_trades, key=lambda x: -x["sell_ts"])[:20]:
         out.append(detail_line(t))
     out.append("")
@@ -897,7 +899,7 @@ def panel(panel_id, active, ai_text, blocks):
     return "".join(out)
 
 
-def compare_blocks(all_trades, recent_trades):
+def compare_blocks(all_trades, recent_trades, label):
     """对比 tab 的图表与数据对照"""
     a = basic_stats(all_trades)
     b = basic_stats(recent_trades)
@@ -920,12 +922,12 @@ def compare_blocks(all_trades, recent_trades):
             ("无计划单盈亏", pna, pnb)]
 
     out = ['<div class="card"><h2>可视化对比</h2>',
-           '<p class="chart-sub">灰色为全量基准，蓝色为最近 %d 天；盈亏比与盈利因子乘以 10 以便同图显示。</p>'
-           % RECENT_DAYS,
+           '<p class="chart-sub">灰色为全量基准，蓝色为 %s；盈亏比与盈利因子乘以 10 以便同图显示。</p>'
+           % label,
            svg_grouped_bars(rows)]
 
     out.append('<h3>数据对照</h3>')
-    out.append(html_table(["指标", "全量", "最近 %d 天" % RECENT_DAYS], [
+    out.append(html_table(["指标", "全量", label], [
         ["交易笔数", "%d" % a["count"], "%d" % b["count"]],
         ["胜率", "%.1f%%" % a["win_rate"], "%.1f%%" % b["win_rate"]],
         ["总盈亏", "%.0f" % a["total_pnl"], "%.0f" % b["total_pnl"]],
@@ -938,7 +940,7 @@ def compare_blocks(all_trades, recent_trades):
         ["平均持股天数", "%.1f" % a["avg_days"], "%.1f" % b["avg_days"]],
         ["反思填写率", "%.0f%%" % a["reflex_rate"], "%.0f%%" % b["reflex_rate"]],
     ]))
-    out.append(html_table(["纪律指标", "全量", "最近 %d 天" % RECENT_DAYS], [
+    out.append(html_table(["纪律指标", "全量", label], [
         ["写了止损位的比例", "%.0f%%" % pa, "%.0f%%" % pb],
         ["无止损计划单的合计盈亏", "%.0f" % pna, "%.0f" % pnb],
     ]))
@@ -969,6 +971,18 @@ def write_file(name, content):
     return path
 
 
+def select_recent(trades):
+    """取近期交易：优先最近 RECENT_DAYS 天的记录；
+    若不足 RECENT_MIN_COUNT 笔，则改取最近 RECENT_MIN_COUNT 笔。
+    返回 (交易列表, 区间名称)"""
+    cutoff = (datetime.now() - timedelta(days=RECENT_DAYS)).timestamp() * 1000
+    recent = [t for t in trades if t["sell_ts"] >= cutoff]
+    if len(recent) >= RECENT_MIN_COUNT:
+        return recent, "最近 %d 天" % RECENT_DAYS
+    recent = sorted(trades, key=lambda x: -x["sell_ts"])[:RECENT_MIN_COUNT]
+    return recent, "最近 %d 笔" % len(recent)
+
+
 def main():
     try:
         ai_client.load_config()
@@ -981,36 +995,35 @@ def main():
         print("没有读取到已清仓记录")
         return
 
-    cutoff = (datetime.now() - timedelta(days=RECENT_DAYS)).timestamp() * 1000
-    recent = [t for t in trades if t["sell_ts"] >= cutoff]
+    recent, recent_label = select_recent(trades)
     suffix = datetime.now().strftime("%Y%m%d")
 
     # 先生成全部内容，任一环节失败则不落盘
     try:
         full_facts = build_facts(trades, "全量")
-        recent_facts = build_facts(recent, "最近 %d 天" % RECENT_DAYS) if recent else ""
-        compare_facts = build_compare_facts(trades, recent) if recent else ""
+        recent_facts = build_facts(recent, recent_label) if recent else ""
+        compare_facts = build_compare_facts(trades, recent, recent_label) if recent else ""
 
         panels = [
             ("panel-full", '全量 <span class="badge">%d 笔</span>' % len(trades),
              panel("panel-full", True, ai_analyze("全量", full_facts),
                    [chart_section(trades), appendix_section(trades)])),
-            ("panel-recent", '最近 %d 天 <span class="badge">%d 笔</span>' % (RECENT_DAYS, len(recent)),
+            ("panel-recent", '%s <span class="badge">%d 笔</span>' % (recent_label, len(recent)),
              panel("panel-recent", False,
-                   ai_analyze("最近 %d 天" % RECENT_DAYS, recent_facts) if recent else "该区间内没有已清仓记录。",
+                   ai_analyze(recent_label, recent_facts) if recent else "该区间内没有已清仓记录。",
                    [chart_section(recent), appendix_section(recent)] if recent else [])),
-            ("panel-compare", '对比 <span class="badge">全量 vs 近 %d 天</span>' % RECENT_DAYS,
+            ("panel-compare", '对比 <span class="badge">全量 vs %s</span>' % recent_label,
              panel("panel-compare", False,
-                   ai_analyze("最近 %d 天 vs 全量基准" % RECENT_DAYS, compare_facts) if recent
-                   else "最近 %d 天内没有已清仓记录，无法对比。" % RECENT_DAYS,
-                   [compare_blocks(trades, recent)] if recent else [])),
+                   ai_analyze("%s vs 全量基准" % recent_label, compare_facts) if recent
+                   else "%s 内没有已清仓记录，无法对比。" % recent_label,
+                   [compare_blocks(trades, recent, recent_label)] if recent else [])),
         ]
 
         page = build_page(panels, suffix)
         outputs = [
             ("report-%s.html" % suffix, page),
             ("trade-facts-full-%s.md" % suffix, full_facts),
-            ("trade-facts-recent30-%s.md" % suffix, recent_facts),
+            ("trade-facts-recent-%s.md" % suffix, recent_facts),
             ("trade-facts-compare-%s.md" % suffix, compare_facts),
         ]
     except RuntimeError as e:
@@ -1021,9 +1034,9 @@ def main():
     print("全量：%d 笔  胜率 %.1f%%  总盈亏 %.0f" % (a["count"], a["win_rate"], a["total_pnl"]))
     if recent:
         b = basic_stats(recent)
-        print("近 %d 天：%d 笔  胜率 %.1f%%  总盈亏 %.0f" % (RECENT_DAYS, b["count"], b["win_rate"], b["total_pnl"]))
+        print("%s：%d 笔  胜率 %.1f%%  总盈亏 %.0f" % (recent_label, b["count"], b["win_rate"], b["total_pnl"]))
     else:
-        print("近 %d 天：没有已清仓记录" % RECENT_DAYS)
+        print("%s：没有已清仓记录" % recent_label)
     for name, content in outputs:
         print("已生成 " + write_file(name, content))
 
