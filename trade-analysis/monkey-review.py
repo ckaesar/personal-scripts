@@ -7,6 +7,7 @@ HTML 不引用任何外部框架/资源，双击即可打开；图表为脚本�
 产出都写在脚本所在目录下的 reports/ 中：
   reports/report-YYYYMMDD.html         单文件报告（三个 tab）
   reports/trade-facts-*.md             喂给模型的统计材料（便于核对 AI 依据）
+入口页写在 trade-analysis/index.html（列出 reports/ 下的历史报告，便于静态托管访问目录）
 
 模型配置读取自项目根目录 feishu-config.json 的 ai 段。
 """
@@ -962,13 +963,76 @@ def build_page(panels, title):
     return head
 
 
-def write_file(name, content):
+def write_file(name, content, out_dir=None):
     """写文件（同名覆盖）"""
-    os.makedirs(OUT_DIR, exist_ok=True)
-    path = os.path.join(OUT_DIR, name)
+    out_dir = out_dir or OUT_DIR
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, name)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
     return path
+
+
+INDEX_TPL = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>交易复盘报告</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--line:#e5e7eb;--text:#111827;--muted:#6b7280;--brand:#2563eb;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+main{max-width:720px;margin:0 auto;padding:48px 20px}
+h1{font-size:22px;margin:0 0 6px}
+.meta{color:var(--muted);font-size:12px;margin:0 0 20px}
+ul{list-style:none;margin:0;padding:0}
+li{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+a{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;color:inherit;text-decoration:none}
+a:hover{background:#f9fafb}
+.day{font-weight:600}
+.go{color:var(--brand);font-size:13px}
+.badge{background:#eff6ff;color:var(--brand);border:1px solid #bfdbfe;border-radius:999px;font-size:12px;padding:1px 8px;margin-left:8px;font-weight:400}
+.empty{color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+</style>
+</head>
+<body>
+<main>
+<h1>交易复盘报告</h1>
+<p class="meta">最近更新 __TIME__ ｜ 数据源：飞书多维表格「已清仓」视图（实时拉取）</p>
+<ul>__ITEMS__</ul>
+</main>
+</body>
+</html>
+"""
+
+
+def list_reports():
+    """列出 reports 目录下已生成的报告，按日期倒序，返回 [(日期, 文件名)]"""
+    if not os.path.isdir(OUT_DIR):
+        return []
+    names = [n for n in os.listdir(OUT_DIR)
+             if n.startswith("report-") and n.endswith(".html")]
+    out = []
+    for n in sorted(names, reverse=True):
+        day = n[len("report-"):-len(".html")]
+        if len(day) == 8 and day.isdigit():
+            day = "%s-%s-%s" % (day[:4], day[4:6], day[6:])
+        out.append((day, n))
+    return out
+
+
+def build_index():
+    """生成入口页 index.html：静态托管（如 GitHub Pages）访问目录时可从这里进报告"""
+    items = []
+    for idx, (day, name) in enumerate(list_reports()):
+        badge = '<span class="badge">最新</span>' if idx == 0 else ""
+        items.append('<li><a href="reports/%s"><span class="day">%s</span>%s'
+                     '<span class="go">查看报告</span></a></li>' % (name, day, badge))
+    if not items:
+        items.append('<li class="empty">暂无报告，先运行 monkey-review.py 生成。</li>')
+    return (INDEX_TPL.replace("__ITEMS__", "".join(items))
+                     .replace("__TIME__", datetime.now().strftime("%Y-%m-%d %H:%M")))
 
 
 def select_recent(trades):
@@ -1039,6 +1103,8 @@ def main():
         print("%s：没有已清仓记录" % recent_label)
     for name, content in outputs:
         print("已生成 " + write_file(name, content))
+    # 入口页写在 trade-analysis/ 下，供静态托管访问目录时使用（报告已落盘后再生成）
+    print("已生成 " + write_file("index.html", build_index(), BASE_DIR))
 
 
 if __name__ == "__main__":

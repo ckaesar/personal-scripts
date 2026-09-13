@@ -119,6 +119,7 @@ python monkey-review.py
 
 | 文件 | 内容 |
 |---|---|
+| `index.html` | **入口页**：列出 `reports/` 下的历史报告（静态托管访问 `trade-analysis/` 目录时用） |
 | `reports/report-YYYYMMDD.html` | **单文件 HTML 报告**：全量 / 近期 / 对比三份内容，顶部 tab 切换 |
 | `reports/trade-facts-*.md` | 喂给模型的统计材料（结构化事实，便于核对 AI 的依据） |
 
