@@ -23,6 +23,8 @@ pip install requests
 | [monkey-bitable.py](monkey-bitable.py) | 读飞书多维表格指定视图的代码列，输出行情 | 多维表格链接，列名可选 |
 | [monkey-hold.py](monkey-hold.py) | 持仓表视图的快捷查询（固定链接，复用 monkey-bitable.py） | 无 |
 | [monkey-target.py](monkey-target.py) | 读目标价表的代码与目标价，对比当前股价 | 无 |
+| [trade-analysis/monkey-review.py](trade-analysis/monkey-review.py) | 交易复盘分析（脚本统计 + AI 分析），产出报告与统计材料 | 无 |
+| [ai_client.py](ai_client.py) | OpenAI 兼容模型调用封装（供 monkey-review.py 使用，配置读 feishu-config.json 的 ai 段） | — |
 | [feishu_bitable.py](feishu_bitable.py) | 飞书多维表格读取的公共模块（被上面两个脚本调用，不直接运行） | — |
 
 ## 股票行情脚本
@@ -106,6 +108,50 @@ python monkey-hold.py
 
 换表格或视图时，编辑脚本顶部的 `URL`。
 
+### trade-analysis/monkey-review.py
+
+交易复盘分析。脚本负责取数与统计（客观、可核对），**分析结论交由 AI 生成**（OpenAI 兼容接口）。脚本、报告、统计材料都集中在 `trade-analysis/` 目录：
+
+```bash
+cd trade-analysis
+python monkey-review.py
+```
+
+| 文件 | 内容 |
+|---|---|
+| `report-YYYYMMDD.html` | **单文件 HTML 报告**：全量 / 最近 30 天 / 对比三份内容，顶部 tab 切换 |
+| `trade-facts-*.md` | 喂给模型的统计材料（结构化事实，便于核对 AI 的依据） |
+
+- 报告为**单文件原生 HTML**（内嵌 CSS/JS，无任何外部框架或资源），双击即可在任意环境打开
+- **图表为脚本生成的原生 SVG**：月度盈亏柱状图、累计盈亏折线图、持股周期胜率、止损模拟、板块盈亏、仓位分层、每笔盈亏序列，对比页还有全量 vs 近 30 天的分组对比图
+- AI 以「顶级交易分析师」角色输出，要求表格化、分层列表、并列对比等结构化表达；正文严禁输出 SVG/HTML/图片语法（脚本另做兜底清理）
+- 数据与结论严格以本次运行实时拉取的数据为唯一事实来源（prompt 中强制约束，禁止编造）
+- 文件名只带日期，当天重复执行会**覆盖**
+
+**统一配置** 项目所有凭证与模型配置都放在 `feishu-config.json`（已加入 `.gitignore`）：
+
+```json
+{
+  "app_id": "cli_xxx",
+  "app_secret": "xxx",
+  "ai": {
+    "base_url": "https://api.deepseek.com",
+    "api_key": "sk-xxx",
+    "model": "deepseek-chat"
+  }
+}
+```
+
+- `ai` 段只被 monkey-review.py 使用；`base_url` 兼容任何 OpenAI 协议服务（通义 `compatible-mode/v1`、OpenAI、Kimi、智谱、本地 Ollama 等）
+- 未填 `ai.api_key` 时脚本直接提示并退出；调用失败会自动重试（最多 3 次，等待 5/10/15 秒），仍失败则提示原因且不生成报告
+- 发给模型的内容：统计指标、分组结果、盈亏明细（含复盘原文摘要）、止损模拟；不包含飞书凭证
+
+**报告结构**（AI 按固定框架输出，prompt 见脚本顶部 `SYSTEM_PROMPT`）：一句话诊断 → 账户体检解读 → 按危害排序的问题 → 已被验证的优势 → 改进的量化空间 → 立刻要立的硬纪律 → 长期机制；之后是脚本生成的可视化图表与数据附录（账户体检、持股周期、止损模拟、板块、仓位、月度、跟操与止损标记、关键词、亏损 Top10）。
+
+`trade-analysis/` 下的 `*.md`、`*.html` 已在 `.gitignore`（含个人交易数据，不要提交）；脚本本身正常入库。
+
+调整口径改脚本顶部常量：`URL`、`RECENT_DAYS`、`DAY_BINS` / `COST_BINS` / `STOP_LIMITS` / `KEYWORDS` / `LOSS_DETAIL`（喂给模型的明细条数）。
+
 ### monkey-target.py
 
 读取目标价表的「股票代码」和「目标价」，与当前股价对比，逻辑复用 monkey-bitable.py 的行情查询。
@@ -142,6 +188,8 @@ python monkey-target.py
   "app_secret": "xxx"
 }
 ```
+
+该文件同时也是项目统一配置文件，模型密钥放在 `ai` 段（见 monkey-review.py 一节）。
 
 使用前需要在飞书开放平台完成：
 

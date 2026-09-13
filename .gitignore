@@ -24,9 +24,13 @@ hs_err_pid*
 replay_pid*
 
 
-# 本地配置（含飞书应用凭证，不要提交）
+# 本地配置（含飞书应用凭证与模型密钥，不要提交）
 feishu-config.json
 
 # Python 缓存
 __pycache__/
 *.pyc
+
+# 交易分析产出（报告与统计材料，含个人交易数据，不要提交）
+trade-analysis/*.md
+trade-analysis/*.html
