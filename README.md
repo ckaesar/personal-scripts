@@ -22,6 +22,7 @@ pip install requests
 | [feishu-bitable.py](feishu-bitable.py) | 读取飞书多维表格指定表格、视图、列的值 | 表格链接或 app_token + table_id，列名可选 |
 | [monkey-bitable.py](monkey-bitable.py) | 读飞书多维表格指定视图的代码列，输出行情 | 多维表格链接，列名可选 |
 | [monkey-hold.py](monkey-hold.py) | 持仓表视图的快捷查询（固定链接，复用 monkey-bitable.py） | 无 |
+| [monkey-target.py](monkey-target.py) | 读目标价表的代码与目标价，对比当前股价 | 无 |
 | [feishu_bitable.py](feishu_bitable.py) | 飞书多维表格读取的公共模块（被上面两个脚本调用，不直接运行） | — |
 
 ## 股票行情脚本
@@ -102,6 +103,30 @@ python monkey-bitable.py "<多维表格链接>" 股票代码
 ```bash
 python monkey-hold.py
 ```
+
+换表格或视图时，编辑脚本顶部的 `URL`。
+
+### monkey-target.py
+
+读取目标价表的「股票代码」和「目标价」，与当前股价对比，逻辑复用 monkey-bitable.py 的行情查询。
+
+```bash
+python monkey-target.py
+```
+
+输出（tab 分隔）：
+
+```text
+华天科技	open:16.38	now:16.20	range:-1.1%	target:15.00	diff:-1.20	rate:-7.41%
+诺德股份	open:11.25	now:10.83	range:-3.73%	target:10.83	diff:0.00	rate:0.00%
+```
+
+- `open`：昨收价（行情接口第 4 个字段，与 monkey.py 口径一致）
+- `now`：当前股价
+- `range`：(当前股价 − 昨收) / 昨收
+- `target`：目标价，表格里为空时默认取当前股价
+- `diff`：目标价 − 当前股价
+- `rate`：(目标价 − 当前股价) / 当前股价
 
 换表格或视图时，编辑脚本顶部的 `URL`。
 

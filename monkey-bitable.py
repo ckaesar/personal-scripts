@@ -29,11 +29,11 @@ def get_codes(url, field_name):
     return codes
 
 
-def print_quotes(codes):
-    """批量查询行情并打印"""
-    failed = 0
-    for i in range(0, len(codes), BATCH_SIZE):
-        batch = codes[i:i + BATCH_SIZE]
+def fetch_quotes(codes, batch_size=BATCH_SIZE):
+    """批量查询行情，返回 {代码: {name, now, prev_close}}"""
+    quotes = {}
+    for i in range(0, len(codes), batch_size):
+        batch = codes[i:i + batch_size]
         r = requests.get(QUOTE_URL + ",".join(batch), timeout=15)
 
         for line in r.text.strip().split("\n"):
@@ -41,18 +41,36 @@ def print_quotes(codes):
                 continue
             options = line.split("=")[1][1:].split("~")
             if len(options) < 5:
-                failed += 1
                 continue
 
-            name = options[1]
-            start = options[4]
-            now = options[3]
+            code = line.split("=")[0].replace("v_", "").strip()
+            quotes[code] = {
+                "name": options[1],
+                "now": options[3],
+                "prev_close": options[4],
+            }
+    return quotes
 
-            startFloat = float(start)
-            nowFloat = float(now)
-            rangeValue = (nowFloat - startFloat) / startFloat
-            rangeValue = str(round(rangeValue * 100, 2))
-            print(name + "\topen:" + start + "\tnow:" + now + "\trange:" + rangeValue + "%")
+
+def print_quotes(codes):
+    """批量查询行情并打印"""
+    quotes = fetch_quotes(codes)
+
+    failed = 0
+    for code in codes:
+        one = quotes.get(code)
+        if not one:
+            failed += 1
+            continue
+
+        prevClose = one["prev_close"]
+        now = one["now"]
+
+        prevFloat = float(prevClose)
+        nowFloat = float(now)
+        rangeValue = (nowFloat - prevFloat) / prevFloat
+        rangeValue = str(round(rangeValue * 100, 2))
+        print(one["name"] + "\topen:" + prevClose + "\tnow:" + now + "\trange:" + rangeValue + "%")
 
     if failed:
         print(str(failed) + " 个代码未取到行情", file=sys.stderr)
