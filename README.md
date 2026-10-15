@@ -26,7 +26,7 @@ pip install requests
 | [trade-analysis/monkey-review.py](trade-analysis/monkey-review.py) | 交易复盘分析（脚本统计 + AI 分析），产出报告与统计材料 | 无 |
 | [ai_client.py](ai_client.py) | OpenAI 兼容模型调用封装（供 monkey-review.py 使用，配置读 feishu-config.json 的 ai 段） | — |
 | [feishu_bitable.py](feishu_bitable.py) | 飞书多维表格读取的公共模块（被上面两个脚本调用，不直接运行） | — |
-| [utf8.py](utf8.py) | 把标准输出/标准错误切换成 UTF-8 的公共模块（各脚本打印前调用，不直接运行） | — |
+| [utf8.py](utf8.py) | 修正服务器 ascii 环境下的输出编码与中文命令行入参（各脚本打印前调用，不直接运行） | — |
 
 ## 股票行情脚本
 
