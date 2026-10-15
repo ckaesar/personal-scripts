@@ -1,6 +1,10 @@
 # coding=utf-8
 import requests
 
+import utf8
+
+utf8.enable()
+
 r = requests.get("http://qt.gtimg.cn/q=sh000001,sz002675,sz002049,sh603993,sz300174,sz159611")
 
 

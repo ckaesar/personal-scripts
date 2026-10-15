@@ -4,6 +4,10 @@ import sys
 
 import requests
 
+import utf8
+
+utf8.enable()
+
 SEARCH_URL = "https://smartbox.gtimg.cn/s3/"
 QUOTE_URL = "http://qt.gtimg.cn/q="
 

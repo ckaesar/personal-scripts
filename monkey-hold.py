@@ -3,6 +3,10 @@
 import importlib.util
 import os
 
+import utf8
+
+utf8.enable()
+
 # 目标多维表格：持仓表（指定视图）
 URL = "https://my.feishu.cn/wiki/PoqXwHD95iU3VSkkxuEc0vL9nrb?table=tblpyRBAhEwCBTh9&view=vewNi5QA33"
 

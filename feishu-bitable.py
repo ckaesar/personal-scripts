@@ -2,6 +2,9 @@
 import sys
 
 import feishu_bitable as fb
+import utf8
+
+utf8.enable()
 
 
 def main():

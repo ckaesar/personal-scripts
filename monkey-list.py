@@ -3,6 +3,10 @@ import csv
 
 import requests
 
+import utf8
+
+utf8.enable()
+
 # 巨潮资讯股票列表，沪深京一次全量返回；字段：code 代码 / zwjc 中文简称 / category 类别
 LIST_URL = "http://www.cninfo.com.cn/new/data/szse_stock.json"
 CSV_FILE = "stocks.csv"

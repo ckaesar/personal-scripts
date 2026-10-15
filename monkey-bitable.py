@@ -4,6 +4,9 @@ import sys
 import requests
 
 import feishu_bitable as fb
+import utf8
+
+utf8.enable()
 
 # 行情接口与打印格式参考 monkey.py
 QUOTE_URL = "http://qt.gtimg.cn/q="

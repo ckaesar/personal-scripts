@@ -23,6 +23,9 @@ sys.path.insert(0, os.path.dirname(BASE_DIR))
 
 import ai_client
 import feishu_bitable as fb
+import utf8
+
+utf8.enable()
 
 # 已清仓记录视图
 URL = "https://my.feishu.cn/wiki/PoqXwHD95iU3VSkkxuEc0vL9nrb?table=tblpyRBAhEwCBTh9&view=vewwqbPGtD"
