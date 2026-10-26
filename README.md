@@ -28,6 +28,7 @@ pip install requests
 | [ai_client.py](ai_client.py) | OpenAI 兼容模型调用封装（供 monkey-review.py 使用，配置读 feishu-config.json 的 ai 段） | — |
 | [feishu_bitable.py](feishu_bitable.py) | 飞书多维表格读取的公共模块（被上面两个脚本调用，不直接运行） | — |
 | [utf8.py](utf8.py) | 修正服务器 ascii 环境下的输出编码与中文命令行入参（各脚本打印前调用，不直接运行） | — |
+| [aliases.sh](aliases.sh) | 服务器用的 shell 别名（被 `~/.bashrc` source，不直接执行） | — |
 
 ## 股票行情脚本
 
@@ -252,6 +253,35 @@ python feishu-bitable.py <app_token> <table_id> 股票代码
 - 输出为 tab 分隔的表头 + 数据行，记录条数打印到 stderr，便于重定向保存
 - 列名写错时会提示「列名不存在」并列出表格可用列
 - 日期字段返回毫秒时间戳，脚本原样输出
+
+## 服务器别名
+
+别名统一由仓库里的 [aliases.sh](aliases.sh) 维护。服务器上只需在 `~/.bashrc` 里 source 一次，以后加别名改这个文件、`git pull` 就生效，换服务器也只加这一行：
+
+```bash
+# ~/.bashrc
+if [ -f /usr/local/personal/apps/personal-scripts/aliases.sh ]; then
+    . /usr/local/personal/apps/personal-scripts/aliases.sh
+fi
+```
+
+改完 `source ~/.bashrc`，用 `type qihuo` 确认能取到定义即可。
+
+| 别名 | 脚本 |
+|---|---|
+| `personal_scripts` | `cd` 到脚本目录 |
+| `monkey1` | [monkey.py](monkey.py) |
+| `bkmonkey` | [monkey-bk.py](monkey-bk.py) |
+| `monkeyjj` | [monkey-jj.py](monkey-jj.py) |
+| `querymonkey` | [monkey-name.py](monkey-name.py) |
+| `monkey` | [monkey-hold.py](monkey-hold.py) |
+| `monkeytarget` | [monkey-target.py](monkey-target.py) |
+| `qihuo` | [monkey-intl.py](monkey-intl.py) |
+
+- `aliases.sh` 里的路径按文件自身位置推导，仓库克隆到别的目录也能用，不用改内容
+- 别名只在交互式 shell 里有效；脚本里如果要调，需要先 `shopt -s expand_aliases`
+- 别名里统一写死 `python3`（服务器上的 `python` 是 2.7，用不了这些脚本）
+- 原来在 `~/.bashrc` 里逐条写的 alias 可以删掉，避免两处维护
 
 ## 备注
 
