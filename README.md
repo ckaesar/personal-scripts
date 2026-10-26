@@ -207,13 +207,14 @@ python monkey-intl.py
 |---|---|---|
 | 新浪 `hf_` | A50、日经225、恒指的**期货** | `hq.sinajs.cn/list=hf_CHA50CFD`，必须带 `Referer: https://finance.sina.com.cn/` |
 | 腾讯 | 道指 / 纳指综指 / 标普500 / 恒指 / 恒生科技（**现货指数**） | `qt.gtimg.cn/q=usDJI`，字段与 A 股脚本完全相同 |
-| 东财 / Yahoo | 韩国综合指数（腾讯、新浪都没有） | 东财 `push2.eastmoney.com` 的 `100.KS11` 优先，取不到再用 Yahoo `^KS11`（非官方）兜底 |
+| 新浪 `znb_` | 韩国综合指数（`znb_KOSPI`，接口里叫「首尔综合指数」） | 和 `hf_` 同一个接口，字段不同：第 1 段名称、第 2 段现价、第 10 段昨收 |
 
 - 期指和现货是两个价格，A50/日经/恒指的期货与对应指数会有价差
 - 新浪的 `int_` 现货国际指数（`int_dji`、`int_nikkei` 等）实测长期不更新，脚本没有采用；`int_kospi`、`int_dax` 直接返回空
-- 韩国综合指数腾讯、新浪都没有：脚本先试东财（国内可访问），失败再试 Yahoo（非官方接口，国内不一定连得上）
+- 韩国综合指数腾讯没有，用的是新浪 `znb_KOSPI`（`znb_` 系列是新浪全球指数的新接口，比 `int_` 新）
+- 东财 `push2.eastmoney.com`、Yahoo、TradingView 在部分网络（如国内云服务器）会被重置/限流/连不上，所以没有采用
 - 单个数据源失败只影响它自己那几行（原因打到 stderr），不会导致整批没输出
-- 加/换标的改脚本顶部的 `SINA_CODES` / `TENCENT_CODES`；韩国综合改 `KOSPI_EASTMONEY_SECID` / `KOSPI_YAHOO_SYMBOL`
+- 加/换标的改脚本顶部的 `SINA_HF_CODES` / `TENCENT_CODES` / `SINA_ZNB_CODES`；名字想改就改 `NAME_OVERRIDES`
 
 ## 飞书多维表格脚本
 
