@@ -23,6 +23,7 @@ pip install requests
 | [monkey-bitable.py](monkey-bitable.py) | 读飞书多维表格指定视图的代码列，输出行情 | 多维表格链接，列名可选 |
 | [monkey-hold.py](monkey-hold.py) | 持仓表视图的快捷查询（固定链接，复用 monkey-bitable.py） | 无 |
 | [monkey-target.py](monkey-target.py) | 读目标价表的代码与目标价，对比当前股价 | 无 |
+| [monkey-intl.py](monkey-intl.py) | 国际指数与期指（A50/日经/恒指期货 + 道指/纳指/标普/恒指/恒生科技/韩国综合） | 无 |
 | [trade-analysis/monkey-review.py](trade-analysis/monkey-review.py) | 交易复盘分析（脚本统计 + AI 分析），产出报告与统计材料 | 无 |
 | [ai_client.py](ai_client.py) | OpenAI 兼容模型调用封装（供 monkey-review.py 使用，配置读 feishu-config.json 的 ai 段） | — |
 | [feishu_bitable.py](feishu_bitable.py) | 飞书多维表格读取的公共模块（被上面两个脚本调用，不直接运行） | — |
@@ -178,6 +179,40 @@ python monkey-target.py
 - `rate`：(目标价 − 当前股价) / 当前股价
 
 换表格或视图时，编辑脚本顶部的 `URL`。
+
+### monkey-intl.py
+
+国际指数与期指，两个数据源合并输出（不需要飞书配置）。
+
+```bash
+python monkey-intl.py
+```
+
+输出（tab 分隔，口径与其它脚本一致：`open` 是昨收）：
+
+```text
+富时中国A50期货	open:13039.000	now:13106.440	range:0.52%
+日经225指数期货	open:62255.000	now:62781.600	range:0.85%
+恒生指数期货	open:23115.000	now:23228.150	range:0.49%
+道琼斯	open:52867.98	now:52215.16	range:-1.23%
+纳斯达克	open:26008.86	now:25955.34	range:-0.21%
+标普500	open:7663.43	now:7623.68	range:-0.52%
+恒生指数	open:23093.370	now:23211.810	range:0.51%
+恒生科技指数	open:3871.660	now:3857.530	range:-0.36%
+韩国综合指数	open:5550.30	now:5469.47	range:-1.46%
+```
+
+| 数据源 | 覆盖标的 | 说明 |
+|---|---|---|
+| 新浪 `hf_` | A50、日经225、恒指的**期货** | `hq.sinajs.cn/list=hf_CHA50CFD`，必须带 `Referer: https://finance.sina.com.cn/` |
+| 腾讯 | 道指 / 纳指综指 / 标普500 / 恒指 / 恒生科技（**现货指数**） | `qt.gtimg.cn/q=usDJI`，字段与 A 股脚本完全相同 |
+| 东财 / Yahoo | 韩国综合指数（腾讯、新浪都没有） | 东财 `push2.eastmoney.com` 的 `100.KS11` 优先，取不到再用 Yahoo `^KS11`（非官方）兜底 |
+
+- 期指和现货是两个价格，A50/日经/恒指的期货与对应指数会有价差
+- 新浪的 `int_` 现货国际指数（`int_dji`、`int_nikkei` 等）实测长期不更新，脚本没有采用；`int_kospi`、`int_dax` 直接返回空
+- 韩国综合指数腾讯、新浪都没有：脚本先试东财（国内可访问），失败再试 Yahoo（非官方接口，国内不一定连得上）
+- 单个数据源失败只影响它自己那几行（原因打到 stderr），不会导致整批没输出
+- 加/换标的改脚本顶部的 `SINA_CODES` / `TENCENT_CODES`；韩国综合改 `KOSPI_EASTMONEY_SECID` / `KOSPI_YAHOO_SYMBOL`
 
 ## 飞书多维表格脚本
 
